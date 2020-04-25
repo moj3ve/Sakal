@@ -1,0 +1,9 @@
+Package: com.p2kdev.sakal
+Name: Sakal
+Depends: mobilesubstrate, preferenceloader, org.thebigboss.libcolorpicker
+Version: 1.1.2
+Architecture: iphoneos-arm
+Description: Next Alarm on your lockscreen!
+Maintainer: P2KDev <p2kdev@gmail.com>
+Author: P2KDev <p2kdev@gmail.com>
+Section: Tweaks
