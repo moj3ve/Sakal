@@ -1,26 +1,5 @@
 #import <libcolorpicker.h>
 
-// Bundle
-static const NSBundle *tweakBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Sakal"];
-
-//static UILabel *sakalAlarmLabel;
-static NSDate *lastKnownFireDate;
-//static bool isEnabled = YES;
-static bool wantsCustomFontColor = NO;
-static int fontSize = 16;
-static int fontWeight = 2;
-static int fontAlignment = 1;
-static int alarmType = 1;
-static CGFloat horizontalOffset = 0;
-static CGFloat verticalOffset = -35;
-static CGFloat horizontalOffsetLS = 0;
-static CGFloat verticalOffsetLS = -20;
-static NSString *alarmFormat = @" EEE hh:mm a";
-static NSString *placeHolderText = @"No upcoming Alarms!";
-static NSString *customFontColor = @"#00000";
-static int nextAlarmThreshold = 24;
-
-
 @interface SBFPagedScrollView : UIScrollView
 @end
 
@@ -33,10 +12,15 @@ static int nextAlarmThreshold = 24;
 	@property (nonatomic,retain) _UILegibilitySettings * legibilitySettings;
 @end
 
+@interface SBFLockScreenDateSubtitleView : UIView
+@end
+
 @interface SBFLockScreenDateView : UIView
 	@property (nonatomic,retain) UIColor * textColor;
 	@property (nonatomic,retain) UIView * sakalNextAlarmView;
 	@property (nonatomic,retain) UILabel * sakalAlarmLabel;
+	@property (nonatomic,readonly) double contentAlpha;
+	@property (nonatomic,retain) SBFLockScreenDateSubtitleView * customSubtitleView;
 	-(void)updateNextAlarm;
 @end
 
@@ -63,73 +47,41 @@ static int nextAlarmThreshold = 24;
 	-(MTAlarm *)nextAlarmSync;
 @end
 
-@interface CSEvent
-	@property (assign,nonatomic) long long type;
-	@property (nonatomic,retain) NSNumber * value;
-@end
+// Bundle
+static const NSBundle *tweakBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Sakal"];
 
-// static void updateVisibility(int action)
-// {
-// 	[UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
-// 	 animations:^{ sakalAlarmLabel.alpha = action;}
-// 	 completion:nil];
-// }
-
-// %hook CSChargingViewController
-// 	-(void)viewWillAppear:(BOOL)arg1
-// 	{
-// 		updateVisibility(0);
-// 		%orig;
-// 	}
-//
-// 	// -(void)handleEvent:(CSEvent *)arg1
-// 	// {
-// 	// 	if (arg1.type == 23)
-// 	// 		updateVisibility(0);
-// 	// 	%orig;
-// 	// }
-//
-// 	-(void)viewDidDisappear:(BOOL)arg1
-// 	{
-// 		%orig;
-// 		updateVisibility(1);
-// 	}
-// %end
-
-%hook SBFPagedScrollView
-
-	-(void)setCurrentPageIndex:(unsigned long long)arg1
-	{
-		%orig;
-			// NSString *msg = [NSString stringWithFormat:@"Next Alarm -> %lld",arg1];
-			// UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"_nextAlarmChanged" message:msg delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil];
-			// [alertView show];
-
-		if (arg1 == 1)
-			updateVisibility(1);
-		 else
-		 	updateVisibility(0);
-	}
-%end
+static NSDate *lastKnownFireDate;
+static bool wantsCustomFontColor = NO;
+static int fontSize = 16;
+static int fontWeight = 2;
+static int alarmType = 1;
+static CGFloat verticalOffset = -15;
+static NSString *alarmFormat = @" EEE hh:mm a";
+static NSString *placeHolderText = @"No upcoming Alarms!";
+static NSString *customFontColor = @"#00000";
+static int nextAlarmThreshold = 24;
 
 %hook SBFLockScreenDateView
-	%property (nonatomic,retain) UIView * sakalNextAlarmView;
 	%property (nonatomic,retain) UILabel * sakalAlarmLabel;
 
--(void)layoutSubviews
+-(id)initWithFrame:(CGRect)arg1
 {
-	%orig;
+	id orig = %orig;
 
-	if (!self.sakalNextAlarmView)
+	if (orig)
 	{
 		 // Add label
-		 self.sakalNextAlarmView = [[UIView alloc] init];
- 		self.sakalAlarmLabel = [[UILabel alloc] init];
-		[self.sakalNextAlarmView addSubview:self.sakalAlarmLabel];
-		[self addSubview:self.sakalNextAlarmView];
+ 		self.sakalAlarmLabel = [[UILabel alloc] initWithFrame:CGRectZero];
+		self.sakalAlarmLabel.adjustsFontSizeToFitWidth = YES;
+		[orig addSubview:self.sakalAlarmLabel];
+		self.sakalAlarmLabel.translatesAutoresizingMaskIntoConstraints = NO;
 
-		[self updateNextAlarm];
+		SBUILegibilityLabel* timeLabel = MSHookIvar<SBUILegibilityLabel*>(self,"_timeLabel");
+		[self.sakalAlarmLabel.centerXAnchor constraintEqualToAnchor:timeLabel.centerXAnchor constant:0].active = YES;
+		[self.sakalAlarmLabel.topAnchor constraintEqualToAnchor:timeLabel.topAnchor constant:verticalOffset].active = YES;
 	}
+
+	return orig;
 }
 
 -(void)_updateLabels
@@ -138,10 +90,15 @@ static int nextAlarmThreshold = 24;
 	[self updateNextAlarm];
 }
 
+-(void)_updateLabelAlpha
+{
+	%orig;
+	self.sakalAlarmLabel.alpha = self.contentAlpha;
+}
+
 %new
 -(void)updateNextAlarm
 {
-	//sakalAlarmView = [[UIView alloc] init];
 	MTAlarmManager *alarmManager = MSHookIvar<MTAlarmManager *>([%c(SBScheduledAlarmObserver) sharedInstance], "_alarmManager");
 	MTAlarm *nextAlarm = [alarmManager nextAlarmSync];
 
@@ -190,7 +147,6 @@ static int nextAlarmThreshold = 24;
 		{
 			self.sakalAlarmLabel.text = nil;
 			self.sakalAlarmLabel.attributedText = nil;
-			//updateVisibility(0);
 			return;
 		}
 		else
@@ -223,7 +179,9 @@ static int nextAlarmThreshold = 24;
 	 else if (fontWeight == 3)
 	 	weightFont = UIFontWeightHeavy;
 
-	 //self.sakalAlarmLabel.textAlignment = fontAlignment;
+	 	//self.sakalAlarmLabel.textAlignment = fontAlignment;
+
+		SBUILegibilityLabel *timelabel = MSHookIvar<SBUILegibilityLabel *>(self, "_timeLabel");
 
 		if (wantsCustomFontColor)
 		{
@@ -231,25 +189,11 @@ static int nextAlarmThreshold = 24;
 		}
 		else
 		{
-			SBUILegibilityLabel *timelabel = MSHookIvar<SBUILegibilityLabel *>(self, "_timeLabel");
 			self.sakalAlarmLabel.textColor = timelabel.legibilitySettings.primaryColor;
 		}
 
 	 self.sakalAlarmLabel.font = [UIFont systemFontOfSize:fontSize weight:weightFont];
 	 self.sakalAlarmLabel.attributedText = attachmentString;
-
-	 // CGSize titleSize = [attachmentString.string sizeWithAttributes:
-	 // @{NSFontAttributeName: [UIFont systemFontOfSize:16]}];
-	 if ([[UIScreen mainScreen] bounds].size.width <= [[UIScreen mainScreen] bounds].size.height)
-	 {
-		 [self.sakalNextAlarmView setFrame:CGRectMake(horizontalOffset,verticalOffset, self.frame.size.width , fontSize + 5)];
-	 }
-	 else
-	 {
-		 [self.sakalNextAlarmView setFrame:CGRectMake(horizontalOffsetLS,verticalOffsetLS, self.frame.size.width , fontSize + 5)];
-	 }
-
-	 //updateVisibility(1);
 }
 
 %end
@@ -263,15 +207,11 @@ static void reloadSettings() {
 		placeHolderText = [prefs objectForKey:@"noAlarmText"] ? [[prefs objectForKey:@"noAlarmText"] stringValue] : placeHolderText;
 		fontWeight = [prefs objectForKey:@"fontWeight"] ? [[prefs objectForKey:@"fontWeight"] intValue] : fontWeight;
 		fontSize = [prefs objectForKey:@"fontSize"] ? [[prefs objectForKey:@"fontSize"] intValue] : fontSize;
-		fontAlignment = [prefs objectForKey:@"fontAlignment"] ? [[prefs objectForKey:@"fontAlignment"] intValue] : fontAlignment;
 		wantsCustomFontColor = [prefs objectForKey:@"wantsCustomColor"] ? [[prefs objectForKey:@"wantsCustomColor"] boolValue] : wantsCustomFontColor;
 		customFontColor = [prefs objectForKey:@"customFontColor"] ? [[prefs objectForKey:@"customFontColor"] stringValue] : customFontColor;
 		alarmType = [prefs objectForKey:@"alarmType"] ? [[prefs objectForKey:@"alarmType"] intValue] : alarmType;
 		nextAlarmThreshold = [prefs objectForKey:@"alarmThreshold"] ? [[prefs objectForKey:@"alarmThreshold"] intValue] : nextAlarmThreshold;
-		horizontalOffset = [prefs objectForKey:@"offsetWidth"] ? [[prefs objectForKey:@"offsetWidth"] floatValue] : horizontalOffset;
-		verticalOffset = [prefs objectForKey:@"offsetHeight"] ? [[prefs objectForKey:@"offsetHeight"] floatValue] : verticalOffset;
-		horizontalOffsetLS = [prefs objectForKey:@"offsetWidthLandscape"] ? [[prefs objectForKey:@"offsetWidthLandscape"] floatValue] : horizontalOffsetLS;
-		verticalOffsetLS = [prefs objectForKey:@"offsetHeightLandscape"] ? [[prefs objectForKey:@"offsetHeightLandscape"] floatValue] : verticalOffsetLS;
+		verticalOffset = [prefs objectForKey:@"verticalOffset"] ? [[prefs objectForKey:@"verticalOffset"] floatValue] : verticalOffset;
 	}
 }
 

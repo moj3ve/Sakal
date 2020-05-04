@@ -163,7 +163,7 @@
 				<string>com.p2kdev.sakal.settingschanged</string>
 			</dict>
 
-			<dict>
+			<!-- <dict>
 				<key>cell</key>
 				<string>PSLinkListCell</string>
 				<key>defaults</key>
@@ -190,7 +190,7 @@
 				</array>
 				<key>PostNotification</key>
 				<string>com.p2kdev.sakal.settingschanged</string>
-			</dict>
+			</dict> -->
 
 			<dict>
 				<key>cell</key>
@@ -238,86 +238,20 @@
 				<key>cell</key>
 				<string>PSGroupCell</string>
 				<key>label</key>
-				<string>Portrait Orientation X and Y Offset</string>
+				<string>Vertical Offset</string>
 				<key>footerText</key>
-				<string>Negative values for X will move the label left and vice versa! Negative values for Y will move the label up and vice versa!</string>
+				<string>Negative values for Y will move the label up and vice versa!</string>
 			</dict>
 
 			<dict>
 				<key>cell</key>
 				<string>PSSliderCell</string>
 				<key>default</key>
-				<integer>0</integer> <!-- Default value of the slider -->
+				<integer>-15</integer> <!-- Default value of the slider -->
 				<key>defaults</key>
 				<string>com.p2kdev.sakal</string> <!-- Your package name here -->
 				<key>key</key>
-				<string>offsetWidth</string> <!-- Your key name here -->
-				<key>max</key>
-				<real>200</real> <!-- Enter your maximum value here -->
-				<key>min</key>
-				<real>-200</real> <!-- Enter your minimum value here -->
-				<key>showValue</key> <!-- Show the value of the slider. true or false. -->
-				<true/>
-				<key>PostNotification</key>
-				<string>com.p2kdev.sakal.settingschanged</string>
-			</dict>
-
-			<dict>
-				<key>cell</key>
-				<string>PSSliderCell</string>
-				<key>default</key>
-				<integer>-35</integer> <!-- Default value of the slider -->
-				<key>defaults</key>
-				<string>com.p2kdev.sakal</string> <!-- Your package name here -->
-				<key>key</key>
-				<string>offsetHeight</string> <!-- Your key name here -->
-				<key>max</key>
-				<real>200</real> <!-- Enter your maximum value here -->
-				<key>min</key>
-				<real>-100</real> <!-- Enter your minimum value here -->
-				<key>showValue</key> <!-- Show the value of the slider. true or false. -->
-				<true/>
-				<key>PostNotification</key>
-				<string>com.p2kdev.sakal.settingschanged</string>
-			</dict>
-
-			<dict>
-				<key>cell</key>
-				<string>PSGroupCell</string>
-				<key>label</key>
-				<string>Landscape Orientation X and Y Offset</string>
-				<key>footerText</key>
-				<string>Negative values for X will move the label left and vice versa! Negative values for Y will move the label up and vice versa!</string>
-			</dict>
-
-			<dict>
-				<key>cell</key>
-				<string>PSSliderCell</string>
-				<key>default</key>
-				<integer>0</integer> <!-- Default value of the slider -->
-				<key>defaults</key>
-				<string>com.p2kdev.sakal</string> <!-- Your package name here -->
-				<key>key</key>
-				<string>offsetWidthLandscape</string> <!-- Your key name here -->
-				<key>max</key>
-				<real>200</real> <!-- Enter your maximum value here -->
-				<key>min</key>
-				<real>-200</real> <!-- Enter your minimum value here -->
-				<key>showValue</key> <!-- Show the value of the slider. true or false. -->
-				<true/>
-				<key>PostNotification</key>
-				<string>com.p2kdev.sakal.settingschanged</string>
-			</dict>
-
-			<dict>
-				<key>cell</key>
-				<string>PSSliderCell</string>
-				<key>default</key>
-				<integer>-20</integer> <!-- Default value of the slider -->
-				<key>defaults</key>
-				<string>com.p2kdev.sakal</string> <!-- Your package name here -->
-				<key>key</key>
-				<string>offsetHeightLandscape</string> <!-- Your key name here -->
+				<string>verticalOffset</string> <!-- Your key name here -->
 				<key>max</key>
 				<real>200</real> <!-- Enter your maximum value here -->
 				<key>min</key>
