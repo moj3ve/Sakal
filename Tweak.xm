@@ -3,7 +3,7 @@
 // Bundle
 static const NSBundle *tweakBundle = [NSBundle bundleWithPath:@"/Library/Application Support/Sakal"];
 
-//static UILabel *sakalAlarmLabel;
+static UILabel *sakalAlarmLabel;
 static NSDate *lastKnownFireDate;
 //static bool isEnabled = YES;
 static bool wantsCustomFontColor = NO;
@@ -35,8 +35,7 @@ static int nextAlarmThreshold = 24;
 
 @interface SBFLockScreenDateView : UIView
 	@property (nonatomic,retain) UIColor * textColor;
-	@property (nonatomic,retain) UIView * sakalNextAlarmView;
-	@property (nonatomic,retain) UILabel * sakalAlarmLabel;
+	@property (nonatomic,readonly) double contentAlpha;
 	-(void)updateNextAlarm;
 @end
 
@@ -63,47 +62,20 @@ static int nextAlarmThreshold = 24;
 	-(MTAlarm *)nextAlarmSync;
 @end
 
-@interface CSEvent
-	@property (assign,nonatomic) long long type;
-	@property (nonatomic,retain) NSNumber * value;
-@end
 
-// static void updateVisibility(int action)
-// {
-// 	[UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
-// 	 animations:^{ sakalAlarmLabel.alpha = action;}
-// 	 completion:nil];
-// }
+static void updateVisibility(int action)
+{
+	[UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+	 animations:^{ sakalAlarmLabel.alpha = action;}
+	 completion:nil];
+}
 
-// %hook CSChargingViewController
-// 	-(void)viewWillAppear:(BOOL)arg1
-// 	{
-// 		updateVisibility(0);
-// 		%orig;
-// 	}
-//
-// 	// -(void)handleEvent:(CSEvent *)arg1
-// 	// {
-// 	// 	if (arg1.type == 23)
-// 	// 		updateVisibility(0);
-// 	// 	%orig;
-// 	// }
-//
-// 	-(void)viewDidDisappear:(BOOL)arg1
-// 	{
-// 		%orig;
-// 		updateVisibility(1);
-// 	}
-// %end
 
 %hook SBFPagedScrollView
 
 	-(void)setCurrentPageIndex:(unsigned long long)arg1
 	{
 		%orig;
-			// NSString *msg = [NSString stringWithFormat:@"Next Alarm -> %lld",arg1];
-			// UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"_nextAlarmChanged" message:msg delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil];
-			// [alertView show];
 
 		if (arg1 == 1)
 			updateVisibility(1);
@@ -113,20 +85,16 @@ static int nextAlarmThreshold = 24;
 %end
 
 %hook SBFLockScreenDateView
-	%property (nonatomic,retain) UIView * sakalNextAlarmView;
-	%property (nonatomic,retain) UILabel * sakalAlarmLabel;
 
 -(void)layoutSubviews
 {
 	%orig;
 
-	if (!self.sakalNextAlarmView)
+	if (!sakalAlarmLabel)
 	{
 		 // Add label
-		 self.sakalNextAlarmView = [[UIView alloc] init];
- 		self.sakalAlarmLabel = [[UILabel alloc] init];
-		[self.sakalNextAlarmView addSubview:self.sakalAlarmLabel];
-		[self addSubview:self.sakalNextAlarmView];
+ 		sakalAlarmLabel = [[UILabel alloc] init];
+		[self addSubview:sakalAlarmLabel];
 
 		[self updateNextAlarm];
 	}
@@ -136,6 +104,13 @@ static int nextAlarmThreshold = 24;
 {
 	%orig;
 	[self updateNextAlarm];
+}
+
+-(void)_updateLabelAlpha
+{
+	%orig;
+	sakalAlarmLabel.alpha = self.contentAlpha;
+
 }
 
 %new
@@ -188,8 +163,8 @@ static int nextAlarmThreshold = 24;
 	{
 		if (!placeHolderText.length)
 		{
-			self.sakalAlarmLabel.text = nil;
-			self.sakalAlarmLabel.attributedText = nil;
+			sakalAlarmLabel.text = nil;
+			sakalAlarmLabel.attributedText = nil;
 			//updateVisibility(0);
 			return;
 		}
@@ -223,30 +198,30 @@ static int nextAlarmThreshold = 24;
 	 else if (fontWeight == 3)
 	 	weightFont = UIFontWeightHeavy;
 
-	 //self.sakalAlarmLabel.textAlignment = fontAlignment;
+	 sakalAlarmLabel.textAlignment = fontAlignment;
 
 		if (wantsCustomFontColor)
 		{
-			self.sakalAlarmLabel.textColor = LCPParseColorString(customFontColor, @"#000000");
+			sakalAlarmLabel.textColor = LCPParseColorString(customFontColor, @"#000000");
 		}
 		else
 		{
 			SBUILegibilityLabel *timelabel = MSHookIvar<SBUILegibilityLabel *>(self, "_timeLabel");
-			self.sakalAlarmLabel.textColor = timelabel.legibilitySettings.primaryColor;
+			sakalAlarmLabel.textColor = timelabel.legibilitySettings.primaryColor;
 		}
 
-	 self.sakalAlarmLabel.font = [UIFont systemFontOfSize:fontSize weight:weightFont];
-	 self.sakalAlarmLabel.attributedText = attachmentString;
+	 sakalAlarmLabel.font = [UIFont systemFontOfSize:fontSize weight:weightFont];
+	 sakalAlarmLabel.attributedText = attachmentString;
 
 	 // CGSize titleSize = [attachmentString.string sizeWithAttributes:
 	 // @{NSFontAttributeName: [UIFont systemFontOfSize:16]}];
 	 if ([[UIScreen mainScreen] bounds].size.width <= [[UIScreen mainScreen] bounds].size.height)
 	 {
-		 [self.sakalNextAlarmView setFrame:CGRectMake(horizontalOffset,verticalOffset, self.frame.size.width , fontSize + 5)];
+		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffset,verticalOffset, self.frame.size.width , fontSize + 5)];
 	 }
 	 else
 	 {
-		 [self.sakalNextAlarmView setFrame:CGRectMake(horizontalOffsetLS,verticalOffsetLS, self.frame.size.width , fontSize + 5)];
+		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffsetLS,verticalOffsetLS, self.frame.size.width , fontSize + 5)];
 	 }
 
 	 //updateVisibility(1);
