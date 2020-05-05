@@ -36,6 +36,7 @@ static int nextAlarmThreshold = 24;
 @interface SBFLockScreenDateView : UIView
 	@property (nonatomic,retain) UIColor * textColor;
 	@property (nonatomic,readonly) double contentAlpha;
+	@property (assign,nonatomic) double dateToTimeStretch;
 	-(void)updateNextAlarm;
 @end
 
@@ -110,7 +111,13 @@ static void updateVisibility(int action)
 {
 	%orig;
 	sakalAlarmLabel.alpha = self.contentAlpha;
+}
 
+-(void)setDateToTimeStretch:(double)arg1
+{
+	%orig;
+	if (arg1 > 0)
+		sakalAlarmLabel.frame = CGRectMake(sakalAlarmLabel.frame.origin.x,self.frame.origin.y + verticalOffset + arg1,sakalAlarmLabel.frame.size.width,sakalAlarmLabel.frame.size.height);
 }
 
 %new
@@ -217,11 +224,11 @@ static void updateVisibility(int action)
 	 // @{NSFontAttributeName: [UIFont systemFontOfSize:16]}];
 	 if ([[UIScreen mainScreen] bounds].size.width <= [[UIScreen mainScreen] bounds].size.height)
 	 {
-		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffset,verticalOffset, self.frame.size.width , fontSize + 5)];
+		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffset,self.frame.origin.y + verticalOffset, self.frame.size.width , fontSize + 5)];
 	 }
 	 else
 	 {
-		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffsetLS,verticalOffsetLS, self.frame.size.width , fontSize + 5)];
+		 [sakalAlarmLabel setFrame:CGRectMake(horizontalOffsetLS,self.frame.origin.y + verticalOffsetLS, self.frame.size.width , fontSize + 5)];
 	 }
 
 	 //updateVisibility(1);
